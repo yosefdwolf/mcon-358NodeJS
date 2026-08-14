@@ -63,6 +63,33 @@ const myChores = [
     { chore: 'Take Out Trash', category: 'Trash', dueDate: '2026-08-04', status: 'completed' },
 ];
 
+app.get('/debug/netcheck', (req, res) => {
+    const net = require('net');
+    const targets = [
+        ['smtp.gmail.com', 465],
+        ['smtp.gmail.com', 587],
+        ['smtp.gmail.com', 25],
+        ['smtp.sendgrid.net', 587],
+        ['smtp.sendgrid.net', 2525],
+    ];
+    const results = {};
+    let remaining = targets.length;
+    targets.forEach(([host, port]) => {
+        const key = `${host}:${port}`;
+        const start = Date.now();
+        const socket = net.createConnection({ host, port, timeout: 6000 });
+        const finish = (status) => {
+            results[key] = { status, ms: Date.now() - start };
+            socket.destroy();
+            remaining -= 1;
+            if (remaining === 0) res.json(results);
+        };
+        socket.on('connect', () => finish('OPEN'));
+        socket.on('timeout', () => finish('TIMEOUT'));
+        socket.on('error', (err) => finish('ERROR:' + err.code));
+    });
+});
+
 app.get(['/', '/home'], (req, res) => {
     res.render('home', {
         title: 'Home',
