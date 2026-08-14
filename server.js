@@ -25,6 +25,7 @@ app.use(express.urlencoded({ extended: false }));
 // data entry + data display page.
 const pool = mysql.createPool({
     host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
@@ -179,7 +180,7 @@ app.use((req, res) => {
     res.status(404).send("Sorry, can't find that!");
 });
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Express running -> http://localhost:${PORT}/`);
 });
