@@ -12,19 +12,35 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const mysql = require('mysql2');
-const nodemailer = require('nodemailer');
 
 const app = express();
 
-// Same Gmail account as the PHP project's mail_config.php - used by the
-// /contact page to actually send the submitted message.
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.GMAIL_USERNAME,
-        pass: process.env.GMAIL_PASSWORD,
-    },
-});
+// Sends the /contact page's message through Resend's HTTPS API rather than
+// raw SMTP - Railway blocks outbound SMTP (ports 25/465/587) platform-wide,
+// so nodemailer-over-SMTP can never connect from here. Resend's "from" has
+// to be their sandbox address unless a custom domain is verified.
+async function sendContactEmail({ name, email, subject, message }) {
+    const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            from: 'Chore Wars <onboarding@resend.dev>',
+            to: [process.env.SITE_ADMIN_EMAIL],
+            reply_to: email,
+            subject: `Chore Wars Contact Form: ${subject}`,
+            text: `From: ${name} (${email})\nSubject: ${subject}\n\n${message}`,
+            html: `<p><strong>From:</strong> ${name} (${email})</p><p><strong>Subject:</strong> ${subject}</p><p><strong>Message:</strong></p><p>${message}</p>`,
+        }),
+    });
+
+    if (!response.ok) {
+        const body = await response.text();
+        throw new Error(`Resend API error (${response.status}): ${body}`);
+    }
+}
 
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
@@ -163,7 +179,7 @@ app.get('/contact', (req, res) => {
     });
 });
 
-app.post('/contact', (req, res) => {
+app.post('/contact', async (req, res) => {
     const { name, email, subject, message } = req.body;
     const errors = [];
     if (!name) errors.push('Name is required.');
@@ -180,28 +196,20 @@ app.post('/contact', (req, res) => {
         return;
     }
 
-    transporter.sendMail({
-        from: process.env.GMAIL_USERNAME,
-        to: process.env.SITE_ADMIN_EMAIL,
-        replyTo: email,
-        subject: `Chore Wars Contact Form: ${subject}`,
-        text: `From: ${name} (${email})\nSubject: ${subject}\n\n${message}`,
-        html: `<p><strong>From:</strong> ${name} (${email})</p><p><strong>Subject:</strong> ${subject}</p><p><strong>Message:</strong></p><p>${message}</p>`,
-    }, (err) => {
-        if (err) {
-            res.render('contact', {
-                title: 'Contact Us',
-                errors: [`Sorry, the message couldn't be sent right now. (${err.message})`],
-                old: { name, email, subject, message },
-            });
-            return;
-        }
+    try {
+        await sendContactEmail({ name, email, subject, message });
         res.render('confirmation', {
             title: 'Confirmation',
             name: name,
             email: email,
         });
-    });
+    } catch (err) {
+        res.render('contact', {
+            title: 'Contact Us',
+            errors: [`Sorry, the message couldn't be sent right now. (${err.message})`],
+            old: { name, email, subject, message },
+        });
+    }
 });
 
 app.use((req, res) => {
