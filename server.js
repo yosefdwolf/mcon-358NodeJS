@@ -12,8 +12,19 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const mysql = require('mysql2');
+const nodemailer = require('nodemailer');
 
 const app = express();
+
+// Same Gmail account as the PHP project's mail_config.php - used by the
+// /contact page to actually send the submitted message.
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.GMAIL_USERNAME,
+        pass: process.env.GMAIL_PASSWORD,
+    },
+});
 
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
@@ -169,10 +180,27 @@ app.post('/contact', (req, res) => {
         return;
     }
 
-    res.render('confirmation', {
-        title: 'Confirmation',
-        name: name,
-        email: email,
+    transporter.sendMail({
+        from: process.env.GMAIL_USERNAME,
+        to: process.env.SITE_ADMIN_EMAIL,
+        replyTo: email,
+        subject: `Chore Wars Contact Form: ${subject}`,
+        text: `From: ${name} (${email})\nSubject: ${subject}\n\n${message}`,
+        html: `<p><strong>From:</strong> ${name} (${email})</p><p><strong>Subject:</strong> ${subject}</p><p><strong>Message:</strong></p><p>${message}</p>`,
+    }, (err) => {
+        if (err) {
+            res.render('contact', {
+                title: 'Contact Us',
+                errors: [`Sorry, the message couldn't be sent right now. (${err.message})`],
+                old: { name, email, subject, message },
+            });
+            return;
+        }
+        res.render('confirmation', {
+            title: 'Confirmation',
+            name: name,
+            email: email,
+        });
     });
 });
 
