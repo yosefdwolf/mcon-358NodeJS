@@ -1,0 +1,23 @@
+extends layout
+
+block content
+  h2 Wall of Shame
+  p Chores that are overdue or were skipped entirely.
+
+  if shameList.length === 0
+    p.msg-success Nothing here right now, everyone's caught up!
+  else
+    table.data-table
+      thead
+        tr
+          th Chore
+          th Roommate
+          th Due Date
+          th Status
+      tbody
+        each row in shameList
+          tr
+            td= row.chore_name
+            td= row.username
+            td= row.due_date
+            td= row.status

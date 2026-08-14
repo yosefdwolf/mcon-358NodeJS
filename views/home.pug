@@ -1,0 +1,27 @@
+extends layout
+
+block content
+  section.hero
+    h2 Stop fighting about whose turn it is.
+    p.
+      Chore Wars is a shared chore planner for roommates, dorms, and apartments.
+      Every chore gets a category, a frequency, and an owner, so your household
+      always knows what's due, who's doing it, and what's been skipped, without
+      a single group text.
+    a.btn(href="/dashboard") View My Dashboard
+
+  h3 Today's Checklist - Sample House
+  ul.checklist
+    each item in checklist
+      li(class=item.done ? "done" : "")
+        if item.done
+          | &#10003; #{item.chore} - #{item.roommate}
+        else
+          | &#9744; #{item.chore} - #{item.roommate}
+
+  h3 How it works
+  .card-grid
+    each card in cards
+      .card
+        h4= card.title
+        p= card.description

@@ -1,0 +1,16 @@
+extends layout
+
+block content
+  h2 Leaderboard
+  table.data-table
+    thead
+      tr
+        th Rank
+        th Roommate
+        th Points
+    tbody
+      each row, i in rankings
+        tr
+          td= i + 1
+          td= row.username
+          td= row.total_points

@@ -1,0 +1,42 @@
+extends layout
+
+block content
+  h2 Manage Chores
+  p Data entry / data display page, backed by the same MySQL database as the PHP project.
+
+  table.data-table
+    thead
+      tr
+        th ID
+        th Name
+        th Category
+        th Frequency
+        th Points
+    tbody
+      each c in chores
+        tr
+          td= c.chore_id
+          td= c.name
+          td= c.category_name || 'Uncategorized'
+          td= c.frequency
+          td= c.point_value
+
+  h3 Add a New Chore
+  form.contact-form(method="POST" action="/chores")
+    .form-group
+      label(for="name") Chore Name
+      input(type="text" id="name" name="name" required)
+    .form-group
+      label(for="category_id") Category
+      select(id="category_id" name="category_id")
+        each cat in categories
+          option(value=cat.category_id)= cat.category_name
+    .form-group
+      label(for="frequency") Frequency
+      select(id="frequency" name="frequency")
+        option(value="Daily") Daily
+        option(value="Weekly") Weekly
+    .form-group
+      label(for="point_value") Point Value
+      input(type="number" id="point_value" name="point_value" value="10" min="1" required)
+    button.btn(type="submit") Add Chore

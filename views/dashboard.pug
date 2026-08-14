@@ -1,0 +1,21 @@
+extends layout
+
+block content
+  h2 My Dashboard
+  p Signed in as #{username} &middot; #{totalPoints} points earned
+
+  table.data-table
+    thead
+      tr
+        th Chore
+        th Category
+        th Due Date
+        th Status
+    tbody
+      each item in myChores
+        tr
+          td= item.chore
+          td= item.category
+          td= item.dueDate
+          td
+            span(class="status status-" + item.status)= item.status

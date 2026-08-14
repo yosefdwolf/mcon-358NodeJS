@@ -1,0 +1,24 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
+    title Chore Wars - #{title}
+    link(rel="stylesheet" href="/css/styles.css")
+  body
+    header.site-header
+      a.site-logo(href="/home")
+        img(src="/images/logo.jpg" alt="Chore Wars logo")
+        h1 Chore Wars
+      nav.site-menu
+        ul
+          li: a(href="/home") Home
+          li: a(href="/dashboard") My Dashboard
+          li: a(href="/leaderboard") Leaderboard
+          li: a(href="/wallofshame") Wall of Shame
+          li: a(href="/chores") Manage Chores
+          li: a(href="/contact") Contact Us
+    main.page-content
+      block content
+    footer.site-footer
+      p &copy; 2026 Chore Wars
